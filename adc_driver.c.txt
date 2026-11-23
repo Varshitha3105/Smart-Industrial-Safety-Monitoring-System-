@@ -1,0 +1,34 @@
+#include "head.h"
+
+#define DONE ((ADDR >> 31) & 1)
+
+void adc_init(void)
+{
+    /* P0.28 as AD0.1 */
+
+//    PINSEL1 &= ~(3<<24);
+//    PINSEL1 |= (1<<24);
+	
+	PINSEL1 |=0x15400000;
+
+    ADCR = 0x00200400;
+}
+
+unsigned int adc_read(unsigned int ch_num)
+{
+    unsigned int result = 0;
+
+    ADCR |= (1<<ch_num);
+
+    ADCR |= (1<<24);
+
+    while(DONE == 0);
+
+    result = (ADDR >> 6) & 0x3FF;
+
+    ADCR &= ~(1<<24);
+
+    ADCR &= ~(1<<ch_num);
+
+    return result;
+}
