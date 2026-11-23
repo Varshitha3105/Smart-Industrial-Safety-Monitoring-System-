@@ -108,20 +108,6 @@ void gpio_init()
 void temperature_read()
 {
     adcval = adc_read(0);
-
-    /*
-       ADC reference = 3.3V
-
-       LM35 output = 10mV per degree Celsius
-
-       Temperature in degree C * 10:
-
-       ADC value * 3300 / 1023
-
-       Example:
-       365 means 36.5 degree C
-    */
-
     temperature = (adcval*3300)/1023;
 }
 
@@ -142,8 +128,6 @@ void pir_read()
 
 void flame_read()
 {
-    /* Assuming active LOW flame sensor */
-
     if((IOPIN0 & FLAME) == 0)
         flame_status = 1;
 
@@ -205,8 +189,6 @@ void led_control()
 
 void lcd_display()
 {
-    /* FIRST LINE */
-
     lcd_cmnd(0x80);
 
     lcd_string("TEMP: ");
@@ -219,9 +201,7 @@ void lcd_display()
 
     lcd_string(" C    ");
 
-
-    /* SECOND LINE */
-
+    
     lcd_cmnd(0xC0);
 
     if(machine_status == SAFE)
@@ -256,8 +236,8 @@ void uart_display()
 
     uart0_tx_string("\r\n--------------------------");
 
-    /* TEMPERATURE */
 
+    
     uart0_tx_string("\r\nTemperature: ");
 
     uart0_int(temperature/10);
@@ -268,7 +248,8 @@ void uart_display()
 
     uart0_tx_string(" C");
 
-    /* PIR STATUS */
+
+    
 
     uart0_tx_string("\r\nPIR Sensor: ");
 
@@ -278,7 +259,8 @@ void uart_display()
     else
         uart0_tx_string("No Movement");
 
-    /* FLAME STATUS */
+
+    
 
     uart0_tx_string("\r\nFlame Sensor: ");
 
@@ -288,8 +270,8 @@ void uart_display()
     else
         uart0_tx_string("NO FIRE");
 
-    /* MACHINE STATUS */
 
+    
     uart0_tx_string("\r\nMachine Status: ");
 
     if(machine_status == SAFE)
@@ -304,7 +286,8 @@ void uart_display()
     else
         uart0_tx_string("EMERGENCY");
 
-    /* LED STATUS */
+
+    
 
     uart0_tx_string("\r\nLED Status: ");
 
@@ -321,38 +304,18 @@ void uart_display()
 }
 
 
-/* MAIN FUNCTION */
-
 int main()
 {
-    /* PCLK = 15MHz assuming CCLK = 60MHz */
+    /* PCLK = 15MHz , CCLK = 60MHz */
 
     VPBDIV = 0x00;
-
-    /* GPIO INITIALIZATION */
-
     gpio_init();
-
-    /* ADC INITIALIZATION */
-
     adc_init();
-
-    /* UART INITIALIZATION */
-
     uart0_init(9600);
-
-    /* LCD INITIALIZATION */
-
     lcd_init();
-
-    /* EXTERNAL INTERRUPT */
-
     config_eint();
-
     config_vic_eint();
 
-
-    /* STARTING MESSAGE */
 
     lcd_cmnd(0x01);
 
@@ -363,37 +326,21 @@ int main()
     lcd_string("SYSTEM STARTED");
 
     uart0_tx_string("\r\nSMART INDUSTRIAL SAFETY SYSTEM STARTED\r\n");
+    
 
     delay_sec(2);
 
 
     while(1)
     {
-        /* READ TEMPERATURE */
-
         temperature_read();
-
-        /* READ PIR SENSOR */
-
         pir_read();
-
-        /* READ FLAME SENSOR */
-
         flame_read();
-
-        /* CHECK SAFETY CONDITIONS */
-
         safety_check();
-
-        /* CONTROL LEDs */
-
+        
         led_control();
 
-        /* LCD DISPLAY */
-
         lcd_display();
-
-        /* UART DISPLAY */
 
         uart_display();
 
